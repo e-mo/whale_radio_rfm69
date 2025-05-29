@@ -122,3 +122,12 @@ int w_radio_broadcast(
 ) {
 
 }
+
+int w_radio_get_rssi(int16_t &rssi) {
+
+	if(!rfm69_rssi_measurement_start(&rfm69_ctx)) return W_RADIO_ERROR;
+
+	if(!rfm69_rssi_measurement_get(&rfm69_ctx, rssi)) return W_RADIO_ERROR;
+
+	return W_RADIO_OK;
+}
