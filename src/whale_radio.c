@@ -116,9 +116,18 @@ int w_radio_rx(
 	return W_RADIO_OK;
 }
 
-int w_radio_broadcast(
+int w_radio_tx_broadcast(
 	void *payload_buffer,
 	ptrdiff_t buffer_size
 ) {
+	return -1;
+}
 
+int w_radio_rx_broadcast(
+	void *payload_buffer,
+	ptrdiff_t buffer_size,
+	ptrdiff_t *payload_size,
+	int *tx_address
+) {
+	return -1;
 }
