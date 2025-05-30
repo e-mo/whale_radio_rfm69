@@ -39,6 +39,12 @@ int w_radio_init(void) {
 		W_RADIO_MODULE_ERROR = RUDP_INIT_FAILURE;
 		return W_RADIO_ERROR;
 	}
+
+	// TEST STUFF
+	//rfm69_power_level_set(&rfm69_ctx, -2);
+    //rfm69_bitrate_set(rfm, RFM69_MODEM_BITRATE_300);
+	//rfm69_fdev_set(rfm, 300000);
+	//rfm69_rxbw_set(rfm, RFM69_RXBW_MANTISSA_16, 0);
 	
 	W_RADIO_MODULE_ERROR = RUDP_INIT_SUCCESS;
 	return W_RADIO_OK;
@@ -79,8 +85,13 @@ int w_radio_subnet_address_get(int *sub_address) {
 }
 
 int w_radio_rssi_get(int *rssi) {
+	*rssi = rudp_ctx.rssi;	
 
-	if (!rfm69_rssi_measurement_get(&rfm69_ctx, rssi)) {
+	return W_RADIO_OK;
+}
+
+int w_radio_dbm_set(int dbm) {
+	if (!rfm69_power_level_set(&rfm69_ctx, dbm)) {
 		W_RADIO_MODULE_ERROR = RUDP_HARDWARE_ERROR;
 		return W_RADIO_ERROR;
 	}
