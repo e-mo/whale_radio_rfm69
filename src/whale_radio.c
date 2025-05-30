@@ -78,6 +78,16 @@ int w_radio_subnet_address_get(int *sub_address) {
 	return -1;
 }
 
+int w_radio_rssi_get(int *rssi) {
+
+	if (!rfm69_rssi_measurement_get(&rfm69_ctx, rssi)) {
+		W_RADIO_MODULE_ERROR = RUDP_HARDWARE_ERROR;
+		return W_RADIO_ERROR;
+	}
+
+	return W_RADIO_OK;
+}
+
 int w_radio_tx(
 	int rx_address,
 	void *payload_buffer,
