@@ -1,8 +1,9 @@
 #include "rp2x_rfm69_rudp.h"
 #include "whale_radio.h"
 
-static rfm69_context_t rfm69_ctx = {0};
-static struct rudp_context rudp_ctx = {0};
+rfm69_context_t rfm69_ctx = {0};
+struct rudp_context rudp_ctx = {0};
+
 
 static int W_RADIO_MODULE_ERROR = RUDP_UNINITIALIZED;
 
@@ -32,7 +33,9 @@ int w_radio_init(void) {
 
 	struct rudp_config_s rudp_config = {
 		.rfm = &rfm69_ctx,
-		.rfm_config = &rfm_config
+		.rfm_config = &rfm_config,
+		.tx_resend_timeout = 1000,
+		.rx_wait_timeout = 10000 
 	};
 
 	if (!rudp_init(&rudp_ctx, &rudp_config)) {
@@ -42,10 +45,18 @@ int w_radio_init(void) {
 
 	// TEST STUFF
 	//rfm69_power_level_set(&rfm69_ctx, -2);
-    //rfm69_bitrate_set(rfm, RFM69_MODEM_BITRATE_300);
-	//rfm69_fdev_set(rfm, 300000);
-	//rfm69_rxbw_set(rfm, RFM69_RXBW_MANTISSA_16, 0);
-	
+    //rfm69_bitrate_set(&rfm69_ctx, RFM69_MODEM_BITRATE_300);
+	//rfm69_fdev_set(&rfm69_ctx, 300000);
+	//rfm69_rxbw_set(&rfm69_ctx, RFM69_RXBW_MANTISSA_16, 0);
+
+	uint8_t whale_sync_word[8] = {0x45, 0x01, 0xB7, 0x9A, 0xFE, 0x01, 0xAC, 0x86};
+	rfm69_sync_value_set(&rfm69_ctx, whale_sync_word, 4);
+
+	//uint8_t sync_config = 0;
+	//rfm69_read(&rfm69_ctx, RFM69_REG_SYNC_CONFIG, &sync_config, 1);
+	//sync_config |= 0x38;
+	//rfm69_write(&rfm69_ctx, RFM69_REG_SYNC_CONFIG, &sync_config, 1);
+
 	W_RADIO_MODULE_ERROR = RUDP_INIT_SUCCESS;
 	return W_RADIO_OK;
 }
@@ -85,7 +96,13 @@ int w_radio_subnet_address_get(int *sub_address) {
 }
 
 int w_radio_rssi_get(int *rssi) {
-	*rssi = rudp_ctx.rssi;	
+	*rssi = rudp_ctx.trx_report.last_rssi;	
+
+	return W_RADIO_OK;
+}
+
+int w_radio_rtr_count_get(int *rtr_count) {
+	*rtr_count = rudp_ctx.trx_report.rtr_count;	
 
 	return W_RADIO_OK;
 }
@@ -126,13 +143,14 @@ int w_radio_rx(
 	W_RADIO_MODULE_ERROR = rudp_rx(
 		&rudp_ctx,
 		payload_buffer,
-		buffer_size,
-		payload_size,
-		tx_address
+		buffer_size
 	);
 
 	if (W_RADIO_MODULE_ERROR != RUDP_RX_SUCCESS)
 		return W_RADIO_ERROR;
+
+	*payload_size = rudp_ctx.trx_report.payload_size;
+	*tx_address = rudp_ctx.trx_report.tx_addr;
 
 	return W_RADIO_OK;
 }
